@@ -1,19 +1,16 @@
 package edu.cnm.deepdive.nasaapod.controller;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import edu.cnm.deepdive.nasaapod.BuildConfig;
@@ -26,8 +23,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -60,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     outState.putLong(CALENDAR_KEY, calendar.getTimeInMillis());
-    outState.putParcelable(APOD_KEY, apod);
+    outState.putSerializable(APOD_KEY, apod);
   }
 
   private void setupWebView() {
@@ -111,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
     calendar = Calendar.getInstance();
     if (savedInstanceState != null) {
       calendar.setTimeInMillis(savedInstanceState.getLong(CALENDAR_KEY, calendar.getTimeInMillis()));
-      apod = savedInstanceState.getParcelable(APOD_KEY);
+      apod = (Apod) savedInstanceState.getSerializable(APOD_KEY);
     }
     if (apod != null) {
       progressSpinner.setVisibility(View.VISIBLE);
@@ -174,11 +169,3 @@ public class MainActivity extends AppCompatActivity {
   }
 
 }
-
-
-
-
-
-
-
-

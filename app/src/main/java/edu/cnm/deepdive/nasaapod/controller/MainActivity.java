@@ -1,6 +1,5 @@
 package edu.cnm.deepdive.nasaapod.controller;
 
-import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,11 +17,12 @@ import edu.cnm.deepdive.nasaapod.R;
 import edu.cnm.deepdive.nasaapod.controller.DateTimePickerFragment.Mode;
 import edu.cnm.deepdive.nasaapod.model.Apod;
 import edu.cnm.deepdive.nasaapod.service.ApodService;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
   private void setupWebView() {
     webView = findViewById(R.id.web_view);
     webView.setWebViewClient(new WebViewClient() {
+
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return false;
@@ -112,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
       progressSpinner.setVisibility(View.VISIBLE);
       webView.loadUrl(apod.getUrl());
     } else {
-      new ApodTask().execute();
+      loadApod(calendar.getTime());
     }
   }
 
@@ -120,52 +121,42 @@ public class MainActivity extends AppCompatActivity {
     DateTimePickerFragment picker = new DateTimePickerFragment();
     picker.setMode(Mode.DATE);
     picker.setCalendar(calendar);
-    picker.setListener((cal) -> new ApodTask().execute(cal.getTime()));
+    picker.setListener((cal) -> loadApod(cal.getTime()));
     picker.show(getSupportFragmentManager(), picker.getClass().getSimpleName());
   }
 
-  private class ApodTask extends AsyncTask<Date, Void, Apod> {
+  private void loadApod(Date date) {
+    DateFormat format = new SimpleDateFormat(DATE_FORMAT);
+    progressSpinner.setVisibility(View.VISIBLE);
+    service.get(apiKey, format.format(date)).enqueue(new ApodCallback(date));
+  }
+
+  private class ApodCallback implements Callback<Apod> {
 
     private Date date;
 
-    @Override
-    protected void onPreExecute() {
-      progressSpinner.setVisibility(View.VISIBLE);
+    public ApodCallback(Date date) {
+      this.date = date;
     }
 
     @Override
-    protected void onPostExecute(Apod apod) {
-      MainActivity.this.apod = apod;
-      // TODO Handle hdUrl.
-      webView.loadUrl(apod.getUrl());
+    public void onResponse(Call<Apod> call, Response<Apod> response) {
+      if (response.isSuccessful()) {
+        Apod apod = response.body();
+        MainActivity.this.apod = apod;
+        calendar.setTime(date);
+        webView.loadUrl(apod.getUrl());
+      } else {
+        progressSpinner.setVisibility(View.GONE);
+      }
     }
 
     @Override
-    protected void onCancelled(Apod apod) {
+    public void onFailure(Call<Apod> call, Throwable throwable) {
       progressSpinner.setVisibility(View.GONE);
       Toast.makeText(MainActivity.this, R.string.error_message, Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    protected Apod doInBackground(Date... dates) {
-      Apod apod = null;
-      try {
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        date = (dates.length == 0) ? calendar.getTime() : dates[0];
-        Response<Apod> response = service.get(apiKey, format.format(date)).execute();
-        if (response.isSuccessful()) {
-          apod = response.body();
-          calendar.setTime(date);
-        }
-      } catch (IOException e) {
-        // Do nothing: apod is already null.
-      } finally {
-        if (apod == null) {
-          cancel(true);
-        }
-      }
-      return apod;
-    }
   }
 
 }

@@ -130,9 +130,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCancelled(Apod apod) {
-      Context context = MainActivity.this;
       progressSpinner.setVisibility(View.GONE);
-      Toast.makeText(context, R.string.error_message, Toast.LENGTH_LONG).show();
+      Toast.makeText(MainActivity.this, R.string.error_message, Toast.LENGTH_LONG).show();
     }
 
     @Override

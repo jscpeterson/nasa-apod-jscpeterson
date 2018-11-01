@@ -26,6 +26,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -52,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
     setupService();
     setupUI();
     setupDefaults(savedInstanceState);
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    outState.putLong(CALENDAR_KEY, calendar.getTimeInMillis());
+    outState.putParcelable(APOD_KEY, apod);
   }
 
   private void setupWebView() {
@@ -100,8 +109,16 @@ public class MainActivity extends AppCompatActivity {
 
   private void setupDefaults(Bundle savedInstanceState) {
     calendar = Calendar.getInstance();
-    // TODO Check for savedInstanceState
-    new ApodTask().execute();
+    if (savedInstanceState != null) {
+      calendar.setTimeInMillis(savedInstanceState.getLong(CALENDAR_KEY, calendar.getTimeInMillis()));
+      apod = savedInstanceState.getParcelable(APOD_KEY);
+    }
+    if (apod != null) {
+      progressSpinner.setVisibility(View.VISIBLE);
+      webView.loadUrl(apod.getUrl());
+    } else {
+      new ApodTask().execute();
+    }
   }
 
   private void pickDate() {

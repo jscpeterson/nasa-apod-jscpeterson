@@ -1,14 +1,13 @@
 package edu.cnm.deepdive.nasaapod.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 import java.util.Date;
 
-public class Apod implements Parcelable {
+public class Apod implements Serializable {
 
-  public static final Creator CREATOR = new Creator();
+  private static final long serialVersionUID = 2547946263420122184L;
 
   @Expose
   private Date date;
@@ -99,46 +98,6 @@ public class Apod implements Parcelable {
 
   public void setServiceVersion(String serviceVersion) {
     this.serviceVersion = serviceVersion;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeLong(date.getTime());
-    dest.writeString(title);
-    dest.writeString(explanation);
-    dest.writeString(copyright);
-    dest.writeString(url);
-    dest.writeString(mediaType);
-    dest.writeString(hdUrl);
-    dest.writeString(serviceVersion);
-  }
-
-  private static class Creator implements Parcelable.Creator<Apod> {
-
-    @Override
-    public Apod createFromParcel(Parcel source) {
-      Apod apod = new Apod();
-      apod.date = new Date(source.readLong());
-      apod.title = source.readString();
-      apod.explanation = source.readString();
-      apod.copyright = source.readString();
-      apod.url = source.readString();
-      apod.mediaType = source.readString();
-      apod.hdUrl = source.readString();
-      apod.serviceVersion = source.readString();
-      return null;
-    }
-
-    @Override
-    public Apod[] newArray(int size) {
-      return new Apod[size];
-    }
-
   }
 
 }

@@ -16,6 +16,11 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "API_KEY", getServiceProperty("api_key")
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation" : "$projectDir/schemas".toString()]
+            }
+        }
     }
     buildTypes {
         release {
@@ -37,6 +42,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+    implementation 'android.arch.persistence.room:runtime:1.1.1'
+    annotationProcessor 'android.arch.persistence.room:compiler:1.1.1'
+    implementation 'com.facebook.stetho:stetho:1.5.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

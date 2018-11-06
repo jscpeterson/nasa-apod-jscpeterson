@@ -17,12 +17,14 @@ import edu.cnm.deepdive.nasaapod.BuildConfig;
 import edu.cnm.deepdive.nasaapod.R;
 import edu.cnm.deepdive.nasaapod.controller.DateTimePickerFragment.Mode;
 import edu.cnm.deepdive.nasaapod.model.Apod;
+import edu.cnm.deepdive.nasaapod.model.ApodDB;
 import edu.cnm.deepdive.nasaapod.service.ApodService;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         return false;
       }
+
       @Override
       public void onPageFinished(WebView view, String url) {
         progressSpinner.setVisibility(View.GONE);
@@ -105,14 +108,15 @@ public class MainActivity extends AppCompatActivity {
   private void setupDefaults(Bundle savedInstanceState) {
     calendar = Calendar.getInstance();
     if (savedInstanceState != null) {
-      calendar.setTimeInMillis(savedInstanceState.getLong(CALENDAR_KEY, calendar.getTimeInMillis()));
+      calendar
+          .setTimeInMillis(savedInstanceState.getLong(CALENDAR_KEY, calendar.getTimeInMillis()));
       apod = (Apod) savedInstanceState.getSerializable(APOD_KEY);
     }
     if (apod != null) {
       progressSpinner.setVisibility(View.VISIBLE);
       webView.loadUrl(apod.getUrl());
     } else {
-      new ApodTask().execute();
+      loadApod();
     }
   }
 
@@ -120,8 +124,48 @@ public class MainActivity extends AppCompatActivity {
     DateTimePickerFragment picker = new DateTimePickerFragment();
     picker.setMode(Mode.DATE);
     picker.setCalendar(calendar);
-    picker.setListener((cal) -> new ApodTask().execute(cal.getTime()));
+    picker.setListener((cal) -> loadApod(cal.getTime()));
     picker.show(getSupportFragmentManager(), picker.getClass().getSimpleName());
+  }
+
+  private void loadApod() {
+    loadApod(calendar.getTime());
+  }
+
+  private void loadApod(Date date) {
+    new QueryApod().execute(date);
+  }
+
+  // TODO Consider a finalizeApod method, that updates UI & database.
+
+  private class QueryApod extends AsyncTask<Date, Void, Apod> {
+
+    private Date date;
+
+    @Override
+    protected void onPreExecute() {
+      progressSpinner.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onPostExecute(Apod apod) {
+      MainActivity.this.apod = apod;
+      // TODO Load from internal storage, if possible.
+      webView.loadUrl(apod.getUrl());
+    }
+
+    @Override
+    protected Apod doInBackground(Date... dates) {
+      Date date = new Date(dates[0].getYear(), dates[0].getMonth(), dates[0].getDate());
+      List<Apod> apods = ApodDB.getInstance(MainActivity.this).getApodDao().find(date);
+      if (apods.size() > 0) {
+        calendar.setTime(date);
+        return apods.get(0);
+      }
+      new ApodTask().execute(date);
+      cancel(true);
+      return null;
+    }
   }
 
   private class ApodTask extends AsyncTask<Date, Void, Apod> {
@@ -156,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
         if (response.isSuccessful()) {
           apod = response.body();
           calendar.setTime(date);
+          ApodDB.getInstance(MainActivity.this).getApodDao().insert(apod);
         }
       } catch (IOException e) {
         // Do nothing: apod is already null.

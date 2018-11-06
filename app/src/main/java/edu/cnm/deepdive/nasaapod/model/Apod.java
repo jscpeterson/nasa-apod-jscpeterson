@@ -1,14 +1,27 @@
 package edu.cnm.deepdive.nasaapod.model;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Index;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.Date;
 
+@Entity(
+    indices = @Index(value = "date", unique = true)
+)
 public class Apod implements Serializable {
 
   private static final long serialVersionUID = 2547946263420122184L;
 
+  @ColumnInfo(name = "apod_id")
+  @PrimaryKey(autoGenerate = true)
+  private long id;
+
+  @NonNull
   @Expose
   private Date date;
 
@@ -36,11 +49,20 @@ public class Apod implements Serializable {
   @SerializedName("service_version")
   private String serviceVersion;
 
+  public long getId() {
+    return id;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
+  @NonNull
   public Date getDate() {
     return date;
   }
 
-  public void setDate(Date date) {
+  public void setDate(@NonNull Date date) {
     this.date = date;
   }
 

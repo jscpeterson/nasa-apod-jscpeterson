@@ -2,4 +2,7 @@
   <string name="app_name">NASA APOD</string>
   <string name="base_url">https://api.nasa.gov/</string>
   <string name="error_message">Unable to retrieve APOD for selected date.</string>
+  <string name="login_error">Unable to sign in. Please check your credentials and connection.</string>
+  <string name="sign_out">Sign out</string>
+
 </resources>

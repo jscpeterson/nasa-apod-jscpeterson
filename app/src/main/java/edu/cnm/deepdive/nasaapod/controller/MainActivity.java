@@ -1,9 +1,12 @@
 package edu.cnm.deepdive.nasaapod.controller;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -13,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import edu.cnm.deepdive.nasaapod.ApodApplication;
 import edu.cnm.deepdive.nasaapod.BuildConfig;
 import edu.cnm.deepdive.nasaapod.R;
 import edu.cnm.deepdive.nasaapod.controller.DateTimePickerFragment.Mode;
@@ -51,6 +55,25 @@ public class MainActivity extends AppCompatActivity {
     setupService();
     setupUI();
     setupDefaults(savedInstanceState);
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.options, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    boolean handled = true;
+    switch (item.getItemId()) {
+      default:
+        handled = super.onOptionsItemSelected(item);
+      case R.id.sign_out:
+        signOut();
+        break;
+    }
+    return handled;
   }
 
   @Override
@@ -118,6 +141,16 @@ public class MainActivity extends AppCompatActivity {
     } else {
       loadApod();
     }
+  }
+
+  private void signOut() {
+    ApodApplication app = ApodApplication.getInstance();
+    app.getClient().signOut().addOnCompleteListener(this, (task) -> {
+      app.setAccount(null);
+      Intent intent = new Intent(this, LoginActivity.class);
+      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
+    });
   }
 
   private void pickDate() {
